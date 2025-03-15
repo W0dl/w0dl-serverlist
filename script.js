@@ -3,27 +3,22 @@ let autoRefreshInterval;
 let lastRefreshTime;
 let timerInterval;
 
-// Function to get server code from URL
 function getServerCodeFromURL() {
-    // Get server code from hash
     const hash = window.location.hash;
     if (hash) {
-        return hash.substring(1); // Remove the # symbol
+        return hash.substring(1);
     }
     return null;
 }
 
-// Function to update URL with server code
 function updateURL(serverCode) {
     if (serverCode) {
         window.location.hash = serverCode;
     } else {
-        // Clear the hash if no server code
         history.pushState("", document.title, window.location.pathname);
     }
 }
 
-// Load server from URL when page loads
 window.addEventListener('load', () => {
     const serverCode = getServerCodeFromURL();
     if (serverCode) {
@@ -32,14 +27,12 @@ window.addEventListener('load', () => {
     }
 });
 
-// Handle hash changes
 window.addEventListener('hashchange', () => {
     const serverCode = getServerCodeFromURL();
     if (serverCode) {
         document.getElementById('serverCode').value = serverCode;
         fetchServerInfo();
     } else {
-        // Clear the display if we're back at the root
         clearServerInfo();
     }
 });
@@ -63,14 +56,11 @@ async function fetchServerInfo(isAutoRefresh = false) {
     }
 
     if (!isAutoRefresh) {
-        // Update URL with server code
         updateURL(serverCode);
         
-        // Store the server code and clear any existing intervals when manually searching
         currentServerCode = serverCode;
         clearAllIntervals();
         
-        // Create or update the refresh indicator
         let refreshIndicator = document.getElementById('refreshIndicator');
         if (!refreshIndicator) {
             refreshIndicator = document.createElement('div');
@@ -79,11 +69,9 @@ async function fetchServerInfo(isAutoRefresh = false) {
             serverHeader.insertBefore(refreshIndicator, serverHeader.firstChild);
         }
         
-        // Start new auto-refresh interval
         lastRefreshTime = Date.now();
         updateRefreshTimer();
         
-        // Set up the auto-refresh interval
         autoRefreshInterval = setInterval(async () => {
             console.log('Auto-refreshing server data...');
             lastRefreshTime = Date.now();
@@ -92,7 +80,6 @@ async function fetchServerInfo(isAutoRefresh = false) {
     }
 
     try {
-        // Add loading indicator for manual searches
         if (!isAutoRefresh) {
             document.getElementById('serverInfo').style.opacity = '0.6';
         }
@@ -112,7 +99,6 @@ async function fetchServerInfo(isAutoRefresh = false) {
                 clearAllIntervals();
                 currentServerCode = '';
                 removeRefreshIndicator();
-                // Remove server code from URL if server not found
                 updateURL('');
             }
             return;
@@ -120,7 +106,6 @@ async function fetchServerInfo(isAutoRefresh = false) {
 
         updateServerInfo(data.Data);
         
-        // Update the last refresh time display
         if (isAutoRefresh) {
             console.log('Successfully auto-refreshed server data');
             const refreshIndicator = document.getElementById('refreshIndicator');
@@ -135,11 +120,9 @@ async function fetchServerInfo(isAutoRefresh = false) {
             clearAllIntervals();
             currentServerCode = '';
             removeRefreshIndicator();
-            // Remove server code from URL if error
             updateURL('');
         }
     } finally {
-        // Remove loading indicator
         if (!isAutoRefresh) {
             document.getElementById('serverInfo').style.opacity = '1';
         }
@@ -147,7 +130,6 @@ async function fetchServerInfo(isAutoRefresh = false) {
 }
 
 function clearAllIntervals() {
-    // Clear both the refresh and timer intervals
     if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
         autoRefreshInterval = null;
@@ -167,7 +149,6 @@ function updateRefreshTimer() {
         const timeSinceLastRefresh = Math.floor((now - lastRefreshTime) / 1000);
         const timeUntilNextRefresh = Math.max(0, 30 - timeSinceLastRefresh);
         
-        // Add a loading animation when close to refresh
         if (timeUntilNextRefresh <= 3) {
             refreshIndicator.textContent = `Refreshing${'.'.repeat(3 - timeUntilNextRefresh)}`;
         } else {
@@ -175,9 +156,7 @@ function updateRefreshTimer() {
         }
     };
 
-    // Update immediately and then every second
     updateTimer();
-    // Clear any existing timer interval before creating a new one
     if (timerInterval) {
         clearInterval(timerInterval);
     }
@@ -192,7 +171,6 @@ function removeRefreshIndicator() {
     clearAllIntervals();
 }
 
-// Add cleanup for the refresh timer when leaving the page
 window.addEventListener('beforeunload', () => {
     clearAllIntervals();
     removeRefreshIndicator();
@@ -232,15 +210,12 @@ function hexToDecimal(s) {
 }
 
 function updateServerInfo(serverData) {
-    // Clean up server name by removing color codes
     const cleanServerName = serverData.hostname.replace(/\^[0-9]/g, '');
     
-    // Update server name and player count
     document.getElementById('serverName').textContent = cleanServerName;
     document.getElementById('playerCount').textContent = 
         `Players: ${serverData.players.length}/${serverData.svMaxclients}`;
 
-    // Update player list with search
     const playerList = document.getElementById('playerList');
     const currentSearch = playerList.querySelector('.list-search')?.value || '';
     
@@ -250,7 +225,6 @@ function updateServerInfo(serverData) {
     `;
     const playerItems = document.getElementById('playerItems');
     
-    // Sort players by ID
     const sortedPlayers = [...serverData.players].sort((a, b) => {
         const idA = parseInt(a.id) || 0;
         const idB = parseInt(b.id) || 0;
@@ -281,7 +255,6 @@ function updateServerInfo(serverData) {
         playerItems.appendChild(playerElement);
     });
 
-    // Update server details
     const serverDetails = document.getElementById('serverDetails');
     serverDetails.innerHTML = `
         <p>Max Clients: ${serverData.svMaxclients}</p>
@@ -290,7 +263,6 @@ function updateServerInfo(serverData) {
         <p>OneSync: ${serverData.vars.onesync_enabled ? 'Enabled' : 'Disabled'}</p>
     `;
 
-    // Update resources list with search
     const resourcesList = document.getElementById('resourcesList');
     const currentResourceSearch = resourcesList.querySelector('.list-search')?.value || '';
     
@@ -300,7 +272,6 @@ function updateServerInfo(serverData) {
     `;
     const resourceItems = document.getElementById('resourceItems');
     if (serverData.resources) {
-        // Sort resources alphabetically
         const sortedResources = serverData.resources.sort((a, b) => a.localeCompare(b));
         sortedResources.forEach(resource => {
             const resourceElement = document.createElement('div');
@@ -310,12 +281,10 @@ function updateServerInfo(serverData) {
         });
     }
 
-    // Reapply any active filters
     if (currentSearch) filterPlayers(currentSearch);
     if (currentResourceSearch) filterResources(currentResourceSearch);
 }
 
-// Add these new functions for search functionality
 function filterPlayers(searchTerm) {
     const playerItems = document.querySelectorAll('.player-item');
     searchTerm = searchTerm.toLowerCase();
@@ -325,7 +294,7 @@ function filterPlayers(searchTerm) {
         const playerId = item.querySelector('.player-info div:nth-child(1)').textContent.toLowerCase();
         
         if (playerName.includes(searchTerm) || playerId.includes(searchTerm)) {
-            item.style.display = 'flex';  // Keep flex display for layout
+            item.style.display = 'flex';
         } else {
             item.style.display = 'none';
         }
@@ -346,7 +315,6 @@ function filterResources(searchTerm) {
     });
 }
 
-// Add a cleanup function to clear the interval when leaving the page
 window.addEventListener('beforeunload', () => {
     if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
