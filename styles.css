@@ -373,4 +373,42 @@ button:hover {
     100% {
         opacity: 1;
     }
+}
+
+.footer {
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    width: 98%;
+    max-width: 1900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.footer p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.footer a {
+    color: #60a5fa;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.footer a:hover {
+    color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+.footer i {
+    font-size: 1.2rem;
 } 
