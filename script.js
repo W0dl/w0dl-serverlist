@@ -1,11 +1,30 @@
-async function fetchServerInfo() {
-    const serverCode = document.getElementById('serverCode').value;
+let currentServerCode = '';
+let autoRefreshInterval;
+
+async function fetchServerInfo(isAutoRefresh = false) {
+    const serverCode = isAutoRefresh ? currentServerCode : document.getElementById('serverCode').value;
+    
     if (!serverCode) {
         alert('Please enter a server code');
         return;
     }
 
+    if (!isAutoRefresh) {
+        // Store the server code and clear any existing interval when manually searching
+        currentServerCode = serverCode;
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+        // Start new auto-refresh interval
+        autoRefreshInterval = setInterval(() => fetchServerInfo(true), 30000);
+    }
+
     try {
+        // Add loading indicator for manual searches
+        if (!isAutoRefresh) {
+            document.getElementById('serverInfo').style.opacity = '0.6';
+        }
+
         // Fetch server info
         const response = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${serverCode}`);
         
@@ -17,14 +36,29 @@ async function fetchServerInfo() {
         const data = await response.json();
         
         if (!data.Data) {
-            alert('Server not found or is offline');
+            if (!isAutoRefresh) {
+                alert('Server not found or is offline');
+                // Clear interval if server is offline
+                clearInterval(autoRefreshInterval);
+                currentServerCode = '';
+            }
             return;
         }
 
         updateServerInfo(data.Data);
     } catch (error) {
         console.error('Error fetching server info:', error);
-        alert(`Error fetching server information: ${error.message}`);
+        if (!isAutoRefresh) {
+            alert(`Error fetching server information: ${error.message}`);
+            // Clear interval if there's an error
+            clearInterval(autoRefreshInterval);
+            currentServerCode = '';
+        }
+    } finally {
+        // Remove loading indicator
+        if (!isAutoRefresh) {
+            document.getElementById('serverInfo').style.opacity = '1';
+        }
     }
 }
 
@@ -72,8 +106,10 @@ function updateServerInfo(serverData) {
 
     // Update player list with search
     const playerList = document.getElementById('playerList');
+    const currentSearch = playerList.querySelector('.list-search')?.value || '';
+    
     playerList.innerHTML = `
-        <input type="text" class="list-search" placeholder="Search players..." onkeyup="filterPlayers(this.value)">
+        <input type="text" class="list-search" placeholder="Search players..." onkeyup="filterPlayers(this.value)" value="${currentSearch}">
         <div id="playerItems"></div>
     `;
     const playerItems = document.getElementById('playerItems');
@@ -86,7 +122,6 @@ function updateServerInfo(serverData) {
     });
     
     sortedPlayers.forEach(player => {
-        console.log('Player identifiers:', player.identifiers);
         const steamId = getSteamId(player.identifiers || []);
         const discordId = getDiscordId(player.identifiers || []);
         
@@ -119,10 +154,12 @@ function updateServerInfo(serverData) {
         <p>OneSync: ${serverData.vars.onesync_enabled ? 'Enabled' : 'Disabled'}</p>
     `;
 
-    // Update resources list with search and alphabetical sorting
+    // Update resources list with search
     const resourcesList = document.getElementById('resourcesList');
+    const currentResourceSearch = resourcesList.querySelector('.list-search')?.value || '';
+    
     resourcesList.innerHTML = `
-        <input type="text" class="list-search" placeholder="Search resources..." onkeyup="filterResources(this.value)">
+        <input type="text" class="list-search" placeholder="Search resources..." onkeyup="filterResources(this.value)" value="${currentResourceSearch}">
         <div id="resourceItems"></div>
     `;
     const resourceItems = document.getElementById('resourceItems');
@@ -136,6 +173,10 @@ function updateServerInfo(serverData) {
             resourceItems.appendChild(resourceElement);
         });
     }
+
+    // Reapply any active filters
+    if (currentSearch) filterPlayers(currentSearch);
+    if (currentResourceSearch) filterResources(currentResourceSearch);
 }
 
 // Add these new functions for search functionality
@@ -167,4 +208,11 @@ function filterResources(searchTerm) {
             item.style.display = 'none';
         }
     });
-} 
+}
+
+// Add a cleanup function to clear the interval when leaving the page
+window.addEventListener('beforeunload', () => {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+}); 
