@@ -22,7 +22,9 @@ async function fetchServerInfo(isAutoRefresh = false) {
         if (!refreshIndicator) {
             refreshIndicator = document.createElement('div');
             refreshIndicator.id = 'refreshIndicator';
-            document.querySelector('.server-header').appendChild(refreshIndicator);
+            const serverHeader = document.querySelector('.server-header');
+            // Insert before the first child (the server name)
+            serverHeader.insertBefore(refreshIndicator, serverHeader.firstChild);
         }
         
         // Start new auto-refresh interval
@@ -88,10 +90,15 @@ async function fetchServerInfo(isAutoRefresh = false) {
 const style = document.createElement('style');
 style.textContent = `
     #refreshIndicator {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.7);
-        margin-top: 0.5rem;
+        font-size: 1rem;
+        color: #60a5fa;
+        margin-bottom: 1rem;
         text-align: center;
+        background: rgba(15, 23, 42, 0.6);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-block;
+        min-width: 200px;
     }
 `;
 document.head.appendChild(style);
@@ -104,7 +111,13 @@ function updateRefreshTimer() {
         const now = Date.now();
         const timeSinceLastRefresh = Math.floor((now - lastRefreshTime) / 1000);
         const timeUntilNextRefresh = Math.max(0, 30 - timeSinceLastRefresh);
-        refreshIndicator.textContent = `Auto-refreshing in ${timeUntilNextRefresh} seconds`;
+        
+        // Add a loading animation when close to refresh
+        if (timeUntilNextRefresh <= 3) {
+            refreshIndicator.textContent = `Refreshing${'.'.repeat(3 - timeUntilNextRefresh)}`;
+        } else {
+            refreshIndicator.textContent = `Auto-refresh in ${timeUntilNextRefresh}s`;
+        }
     };
 
     // Update immediately and then every second
