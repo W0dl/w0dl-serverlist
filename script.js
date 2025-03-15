@@ -1,5 +1,6 @@
 let currentServerCode = '';
 let autoRefreshInterval;
+let lastRefreshTime;
 
 async function fetchServerInfo(isAutoRefresh = false) {
     const serverCode = isAutoRefresh ? currentServerCode : document.getElementById('serverCode').value;
@@ -15,8 +16,22 @@ async function fetchServerInfo(isAutoRefresh = false) {
         if (autoRefreshInterval) {
             clearInterval(autoRefreshInterval);
         }
+        
+        // Create or update the refresh indicator
+        let refreshIndicator = document.getElementById('refreshIndicator');
+        if (!refreshIndicator) {
+            refreshIndicator = document.createElement('div');
+            refreshIndicator.id = 'refreshIndicator';
+            document.querySelector('.server-header').appendChild(refreshIndicator);
+        }
+        
         // Start new auto-refresh interval
-        autoRefreshInterval = setInterval(() => fetchServerInfo(true), 30000);
+        lastRefreshTime = Date.now();
+        updateRefreshTimer();
+        autoRefreshInterval = setInterval(() => {
+            fetchServerInfo(true);
+            lastRefreshTime = Date.now();
+        }, 30000);
     }
 
     try {
@@ -28,7 +43,6 @@ async function fetchServerInfo(isAutoRefresh = false) {
         // Fetch server info
         const response = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${serverCode}`);
         
-        // Add status code check
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -38,21 +52,29 @@ async function fetchServerInfo(isAutoRefresh = false) {
         if (!data.Data) {
             if (!isAutoRefresh) {
                 alert('Server not found or is offline');
-                // Clear interval if server is offline
                 clearInterval(autoRefreshInterval);
                 currentServerCode = '';
+                removeRefreshIndicator();
             }
             return;
         }
 
         updateServerInfo(data.Data);
+        
+        // Update the last refresh time display
+        if (isAutoRefresh) {
+            const refreshIndicator = document.getElementById('refreshIndicator');
+            if (refreshIndicator) {
+                lastRefreshTime = Date.now();
+            }
+        }
     } catch (error) {
         console.error('Error fetching server info:', error);
         if (!isAutoRefresh) {
             alert(`Error fetching server information: ${error.message}`);
-            // Clear interval if there's an error
             clearInterval(autoRefreshInterval);
             currentServerCode = '';
+            removeRefreshIndicator();
         }
     } finally {
         // Remove loading indicator
@@ -61,6 +83,56 @@ async function fetchServerInfo(isAutoRefresh = false) {
         }
     }
 }
+
+// Add this to your existing CSS file
+const style = document.createElement('style');
+style.textContent = `
+    #refreshIndicator {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0.5rem;
+        text-align: center;
+    }
+`;
+document.head.appendChild(style);
+
+function updateRefreshTimer() {
+    const refreshIndicator = document.getElementById('refreshIndicator');
+    if (!refreshIndicator || !lastRefreshTime) return;
+
+    const updateTimer = () => {
+        const now = Date.now();
+        const timeSinceLastRefresh = Math.floor((now - lastRefreshTime) / 1000);
+        const timeUntilNextRefresh = Math.max(0, 30 - timeSinceLastRefresh);
+        refreshIndicator.textContent = `Auto-refreshing in ${timeUntilNextRefresh} seconds`;
+    };
+
+    // Update immediately and then every second
+    updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+
+    // Store the timer interval ID in the element
+    refreshIndicator.dataset.timerInterval = timerInterval;
+}
+
+function removeRefreshIndicator() {
+    const refreshIndicator = document.getElementById('refreshIndicator');
+    if (refreshIndicator) {
+        // Clear the timer interval
+        if (refreshIndicator.dataset.timerInterval) {
+            clearInterval(Number(refreshIndicator.dataset.timerInterval));
+        }
+        refreshIndicator.remove();
+    }
+}
+
+// Add cleanup for the refresh timer when leaving the page
+window.addEventListener('beforeunload', () => {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    removeRefreshIndicator();
+});
 
 function getSteamId(ids) {
     const filteredIdentifiers = ids.filter((identifier) => identifier.startsWith('steam:'));
