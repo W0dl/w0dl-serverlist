@@ -5,18 +5,22 @@ let timerInterval;
 
 // Function to get server code from URL
 function getServerCodeFromURL() {
-    const pathSegments = window.location.pathname.split('/');
-    const serverCode = pathSegments[pathSegments.length - 1];
-    return serverCode && serverCode !== 'w0dl-serverlist' ? serverCode : null;
+    // Get server code from hash
+    const hash = window.location.hash;
+    if (hash) {
+        return hash.substring(1); // Remove the # symbol
+    }
+    return null;
 }
 
 // Function to update URL with server code
 function updateURL(serverCode) {
-    const baseURL = window.location.pathname.includes('w0dl-serverlist') 
-        ? '/w0dl-serverlist/'
-        : '/';
-    const newURL = baseURL + serverCode;
-    window.history.pushState({ serverCode }, '', newURL);
+    if (serverCode) {
+        window.location.hash = serverCode;
+    } else {
+        // Clear the hash if no server code
+        history.pushState("", document.title, window.location.pathname);
+    }
 }
 
 // Load server from URL when page loads
@@ -28,8 +32,8 @@ window.addEventListener('load', () => {
     }
 });
 
-// Handle browser back/forward buttons
-window.addEventListener('popstate', (event) => {
+// Handle hash changes
+window.addEventListener('hashchange', () => {
     const serverCode = getServerCodeFromURL();
     if (serverCode) {
         document.getElementById('serverCode').value = serverCode;
