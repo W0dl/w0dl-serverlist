@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiveM Server Info</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="search-container">
+            <input type="text" id="serverCode" placeholder="Enter server code (e.g., 4ro7x9)">
+            <button onclick="fetchServerInfo()">Search Server</button>
+        </div>
+
+        <div class="server-info" id="serverInfo">
+            <div class="server-header">
+                <h1 id="serverName">Server Name</h1>
+                <p id="playerCount">Players: 0/0</p>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <h2>Player List</h2>
+                    <div class="player-list" id="playerList"></div>
+                </div>
+
+                <div class="info-card">
+                    <h2>Server Details</h2>
+                    <div id="serverDetails"></div>
+                </div>
+
+                <div class="info-card">
+                    <h2>Resources</h2>
+                    <div class="resources-list" id="resourcesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
