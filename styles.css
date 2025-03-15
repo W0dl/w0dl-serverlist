@@ -348,4 +348,29 @@ button:hover {
         min-width: 32px;
         height: 32px;
     }
+}
+
+#refreshIndicator {
+    font-size: 1rem;
+    color: #60a5fa;
+    margin-bottom: 1rem;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    min-width: 200px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
 } 
