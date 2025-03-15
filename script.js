@@ -3,6 +3,53 @@ let autoRefreshInterval;
 let lastRefreshTime;
 let timerInterval;
 
+// Function to get server code from URL
+function getServerCodeFromURL() {
+    const pathSegments = window.location.pathname.split('/');
+    const serverCode = pathSegments[pathSegments.length - 1];
+    return serverCode && serverCode !== 'w0dl-serverlist' ? serverCode : null;
+}
+
+// Function to update URL with server code
+function updateURL(serverCode) {
+    const baseURL = window.location.pathname.includes('w0dl-serverlist') 
+        ? '/w0dl-serverlist/'
+        : '/';
+    const newURL = baseURL + serverCode;
+    window.history.pushState({ serverCode }, '', newURL);
+}
+
+// Load server from URL when page loads
+window.addEventListener('load', () => {
+    const serverCode = getServerCodeFromURL();
+    if (serverCode) {
+        document.getElementById('serverCode').value = serverCode;
+        fetchServerInfo();
+    }
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', (event) => {
+    const serverCode = getServerCodeFromURL();
+    if (serverCode) {
+        document.getElementById('serverCode').value = serverCode;
+        fetchServerInfo();
+    } else {
+        // Clear the display if we're back at the root
+        clearServerInfo();
+    }
+});
+
+function clearServerInfo() {
+    document.getElementById('serverName').textContent = 'Server Name';
+    document.getElementById('playerCount').textContent = 'Players: 0/0';
+    document.getElementById('playerList').innerHTML = '';
+    document.getElementById('serverDetails').innerHTML = '';
+    document.getElementById('resourcesList').innerHTML = '';
+    clearAllIntervals();
+    removeRefreshIndicator();
+}
+
 async function fetchServerInfo(isAutoRefresh = false) {
     const serverCode = isAutoRefresh ? currentServerCode : document.getElementById('serverCode').value;
     
@@ -12,6 +59,9 @@ async function fetchServerInfo(isAutoRefresh = false) {
     }
 
     if (!isAutoRefresh) {
+        // Update URL with server code
+        updateURL(serverCode);
+        
         // Store the server code and clear any existing intervals when manually searching
         currentServerCode = serverCode;
         clearAllIntervals();
@@ -58,6 +108,8 @@ async function fetchServerInfo(isAutoRefresh = false) {
                 clearAllIntervals();
                 currentServerCode = '';
                 removeRefreshIndicator();
+                // Remove server code from URL if server not found
+                updateURL('');
             }
             return;
         }
@@ -79,6 +131,8 @@ async function fetchServerInfo(isAutoRefresh = false) {
             clearAllIntervals();
             currentServerCode = '';
             removeRefreshIndicator();
+            // Remove server code from URL if error
+            updateURL('');
         }
     } finally {
         // Remove loading indicator
