@@ -1,6 +1,7 @@
 let currentServerCode = '';
 let autoRefreshInterval;
 let lastRefreshTime;
+let timerInterval;
 
 async function fetchServerInfo(isAutoRefresh = false) {
     const serverCode = isAutoRefresh ? currentServerCode : document.getElementById('serverCode').value;
@@ -11,11 +12,9 @@ async function fetchServerInfo(isAutoRefresh = false) {
     }
 
     if (!isAutoRefresh) {
-        // Store the server code and clear any existing interval when manually searching
+        // Store the server code and clear any existing intervals when manually searching
         currentServerCode = serverCode;
-        if (autoRefreshInterval) {
-            clearInterval(autoRefreshInterval);
-        }
+        clearAllIntervals();
         
         // Create or update the refresh indicator
         let refreshIndicator = document.getElementById('refreshIndicator');
@@ -23,16 +22,18 @@ async function fetchServerInfo(isAutoRefresh = false) {
             refreshIndicator = document.createElement('div');
             refreshIndicator.id = 'refreshIndicator';
             const serverHeader = document.querySelector('.server-header');
-            // Insert before the first child (the server name)
             serverHeader.insertBefore(refreshIndicator, serverHeader.firstChild);
         }
         
         // Start new auto-refresh interval
         lastRefreshTime = Date.now();
         updateRefreshTimer();
-        autoRefreshInterval = setInterval(() => {
-            fetchServerInfo(true);
+        
+        // Set up the auto-refresh interval
+        autoRefreshInterval = setInterval(async () => {
+            console.log('Auto-refreshing server data...');
             lastRefreshTime = Date.now();
+            await fetchServerInfo(true);
         }, 30000);
     }
 
@@ -42,7 +43,7 @@ async function fetchServerInfo(isAutoRefresh = false) {
             document.getElementById('serverInfo').style.opacity = '0.6';
         }
 
-        // Fetch server info
+        console.log(`Fetching server info for ${serverCode}...`);
         const response = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${serverCode}`);
         
         if (!response.ok) {
@@ -54,7 +55,7 @@ async function fetchServerInfo(isAutoRefresh = false) {
         if (!data.Data) {
             if (!isAutoRefresh) {
                 alert('Server not found or is offline');
-                clearInterval(autoRefreshInterval);
+                clearAllIntervals();
                 currentServerCode = '';
                 removeRefreshIndicator();
             }
@@ -65,6 +66,7 @@ async function fetchServerInfo(isAutoRefresh = false) {
         
         // Update the last refresh time display
         if (isAutoRefresh) {
+            console.log('Successfully auto-refreshed server data');
             const refreshIndicator = document.getElementById('refreshIndicator');
             if (refreshIndicator) {
                 lastRefreshTime = Date.now();
@@ -74,7 +76,7 @@ async function fetchServerInfo(isAutoRefresh = false) {
         console.error('Error fetching server info:', error);
         if (!isAutoRefresh) {
             alert(`Error fetching server information: ${error.message}`);
-            clearInterval(autoRefreshInterval);
+            clearAllIntervals();
             currentServerCode = '';
             removeRefreshIndicator();
         }
@@ -86,22 +88,17 @@ async function fetchServerInfo(isAutoRefresh = false) {
     }
 }
 
-// Add this to your existing CSS file
-const style = document.createElement('style');
-style.textContent = `
-    #refreshIndicator {
-        font-size: 1rem;
-        color: #60a5fa;
-        margin-bottom: 1rem;
-        text-align: center;
-        background: rgba(15, 23, 42, 0.6);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        display: inline-block;
-        min-width: 200px;
+function clearAllIntervals() {
+    // Clear both the refresh and timer intervals
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
     }
-`;
-document.head.appendChild(style);
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
 
 function updateRefreshTimer() {
     const refreshIndicator = document.getElementById('refreshIndicator');
@@ -122,28 +119,24 @@ function updateRefreshTimer() {
 
     // Update immediately and then every second
     updateTimer();
-    const timerInterval = setInterval(updateTimer, 1000);
-
-    // Store the timer interval ID in the element
-    refreshIndicator.dataset.timerInterval = timerInterval;
+    // Clear any existing timer interval before creating a new one
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+    timerInterval = setInterval(updateTimer, 1000);
 }
 
 function removeRefreshIndicator() {
     const refreshIndicator = document.getElementById('refreshIndicator');
     if (refreshIndicator) {
-        // Clear the timer interval
-        if (refreshIndicator.dataset.timerInterval) {
-            clearInterval(Number(refreshIndicator.dataset.timerInterval));
-        }
         refreshIndicator.remove();
     }
+    clearAllIntervals();
 }
 
 // Add cleanup for the refresh timer when leaving the page
 window.addEventListener('beforeunload', () => {
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-    }
+    clearAllIntervals();
     removeRefreshIndicator();
 });
 
