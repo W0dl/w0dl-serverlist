@@ -379,7 +379,7 @@ button:hover {
     text-align: center;
     color: rgba(255, 255, 255, 0.8);
     font-size: 1rem;
-    border-radius: 12px;
+    border-radius: 3px;
     backdrop-filter: blur(10px);
     width: 98%;
     max-width: 1900px;
