@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <title>Page Not Found</title>
     <script>
-        // Get the current path
         const path = window.location.pathname;
-        // Get the server code from the path (last segment)
         const serverCode = path.split('/').filter(Boolean).pop();
         
-        // Redirect to the main page with the server code as a hash
         if (serverCode) {
             window.location.href = '/w0dl-serverlist/#' + serverCode;
         } else {
