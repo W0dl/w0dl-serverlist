@@ -3,22 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="W0dl Server List - View FiveM server information">
-    <meta name="theme-color" content="#0f172a">
     <title>W0dl Server List</title>
     <link rel="icon" type="image/png" href="w.png">
     <link rel="stylesheet" href="styles.css">
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" as="style">
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" as="style">
-    <!-- Load non-critical resources asynchronously -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="search-container">
-            <input type="text" id="serverCode" placeholder="Enter server code (e.g., 4ro7x9)" autocomplete="off">
+            <input type="text" id="serverCode" placeholder="Enter server code (e.g., 4ro7x9)">
             <button onclick="fetchServerInfo()">Search Server</button>
         </div>
 
@@ -47,9 +41,8 @@
         </div>
     </div>
     <footer class="footer">
-        <p>Made by W0dl <a href="https://github.com/w0dl" target="_blank" rel="noopener noreferrer" title="Visit W0dl's GitHub"><i class="fab fa-github"></i></a></p>
+        <p>Made by W0dl <a href="https://github.com/w0dl" target="_blank" title="Visit W0dl's GitHub"><i class="fab fa-github"></i></a></p>
     </footer>
-    <!-- Load script at the end of body -->
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
 </body>
 </html> 
