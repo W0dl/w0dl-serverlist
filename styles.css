@@ -3,6 +3,8 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Inter', 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -10,6 +12,7 @@ body {
     min-height: 100vh;
     color: #fff;
     overflow-x: hidden;
+    will-change: transform;
 }
 
 .container {
@@ -23,6 +26,8 @@ body {
     text-align: center;
     margin-bottom: 2rem;
     animation: fadeIn 0.5s ease-out;
+    will-change: opacity;
+    transform: translateZ(0);
 }
 
 input {
@@ -77,6 +82,8 @@ button:hover {
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     animation: slideUp 0.5s ease-out;
+    will-change: transform, opacity;
+    transform: translateZ(0);
 }
 
 @media (min-width: 768px) {
@@ -130,13 +137,14 @@ button:hover {
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease;
     width: 100%;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .info-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px) translateZ(0);
 }
 
 .info-card h2 {
@@ -154,11 +162,17 @@ button:hover {
     flex-direction: column;
     padding-top: 0;
     min-height: 300px;
+    -webkit-overflow-scrolling: touch;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 #serverDetails {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .list-search {
@@ -172,28 +186,25 @@ button:hover {
     top: 0;
     z-index: 2;
     margin: 0 0 1rem 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    will-change: transform;
+    transform: translateZ(0);
 }
 
-.player-item {
+.player-item, .resource-item {
     padding: 0.8rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    background: rgba(15, 23, 42, 0.4);
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease;
     border-radius: 8px;
+    background: rgba(15, 23, 42, 0.4);
     margin-bottom: 0.5rem;
-    width: 100%;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
-@media (min-width: 640px) {
-    .player-item {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-    }
+.player-item:hover, .resource-item:hover {
+    transform: translateY(-1px) translateZ(0);
 }
 
 .player-info {
@@ -249,16 +260,6 @@ button:hover {
     justify-content: center;
 }
 
-.resource-item {
-    padding: 0.8rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    background: rgba(15, 23, 42, 0.4);
-    margin-bottom: 0.5rem;
-    word-break: break-all;
-}
-
 #playerItems, #resourceItems {
     padding: 1rem;
     position: relative;
@@ -271,6 +272,9 @@ button:hover {
 .player-list, .resources-list, #serverDetails, #playerItems, #resourceItems {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    -webkit-overflow-scrolling: touch;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .player-list::-webkit-scrollbar,
@@ -307,11 +311,11 @@ button:hover {
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(20px) translateZ(0);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 }
 

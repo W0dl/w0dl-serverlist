@@ -2,6 +2,9 @@ let currentServerCode = '';
 let autoRefreshInterval;
 let lastRefreshTime;
 let timerInterval;
+let debounceTimer;
+let lastPlayerSearch = '';
+let lastResourceSearch = '';
 
 function getServerCodeFromURL() {
     const hash = window.location.hash;
@@ -209,27 +212,53 @@ function hexToDecimal(s) {
     return digits.reverse().join('');
 }
 
+// Debounce function to limit function calls
+function debounce(func, wait) {
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(debounceTimer);
+            func(...args);
+        };
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(later, wait);
+    };
+}
+
 function updateServerInfo(serverData) {
     const cleanServerName = serverData.hostname.replace(/\^[0-9]/g, '');
     
-    document.getElementById('serverName').textContent = cleanServerName;
-    document.getElementById('playerCount').textContent = 
-        `Players: ${serverData.players.length}/${serverData.svMaxclients}`;
+    // Batch DOM updates
+    const updates = {
+        serverName: cleanServerName,
+        playerCount: `Players: ${serverData.players.length}/${serverData.svMaxclients}`
+    };
 
+    // Update server header
+    requestAnimationFrame(() => {
+        document.getElementById('serverName').textContent = updates.serverName;
+        document.getElementById('playerCount').textContent = updates.playerCount;
+    });
+
+    // Update player list with performance optimizations
     const playerList = document.getElementById('playerList');
     const currentSearch = playerList.querySelector('.list-search')?.value || '';
     
-    playerList.innerHTML = `
-        <input type="text" class="list-search" placeholder="Search players..." onkeyup="filterPlayers(this.value)" value="${currentSearch}">
-        <div id="playerItems"></div>
-    `;
+    if (!playerList.querySelector('.list-search')) {
+        playerList.innerHTML = `
+            <input type="text" class="list-search" placeholder="Search players..." onkeyup="debouncedFilterPlayers(this.value)" value="${currentSearch}">
+            <div id="playerItems"></div>
+        `;
+    }
+
     const playerItems = document.getElementById('playerItems');
-    
     const sortedPlayers = [...serverData.players].sort((a, b) => {
         const idA = parseInt(a.id) || 0;
         const idB = parseInt(b.id) || 0;
         return idA - idB;
     });
+    
+    // Use DocumentFragment for better performance
+    const fragment = document.createDocumentFragment();
     
     sortedPlayers.forEach(player => {
         const steamId = getSteamId(player.identifiers || []);
@@ -252,38 +281,70 @@ function updateServerInfo(serverData) {
                 </a>` : ''}
             </div>
         `;
-        playerItems.appendChild(playerElement);
+        fragment.appendChild(playerElement);
+    });
+    
+    requestAnimationFrame(() => {
+        playerItems.innerHTML = '';
+        playerItems.appendChild(fragment);
     });
 
+    // Update server details
     const serverDetails = document.getElementById('serverDetails');
-    serverDetails.innerHTML = `
-        <p>Max Clients: ${serverData.svMaxclients}</p>
-        <p>Game Build: ${serverData.gametype}</p>
-        <p>Map: ${serverData.mapname}</p>
-        <p>OneSync: ${serverData.vars.onesync_enabled ? 'Enabled' : 'Disabled'}</p>
-    `;
+    requestAnimationFrame(() => {
+        serverDetails.innerHTML = `
+            <p>Max Clients: ${serverData.svMaxclients}</p>
+            <p>Game Build: ${serverData.gametype}</p>
+            <p>Map: ${serverData.mapname}</p>
+            <p>OneSync: ${serverData.vars.onesync_enabled ? 'Enabled' : 'Disabled'}</p>
+        `;
+    });
 
+    // Update resources list with performance optimizations
     const resourcesList = document.getElementById('resourcesList');
     const currentResourceSearch = resourcesList.querySelector('.list-search')?.value || '';
     
-    resourcesList.innerHTML = `
-        <input type="text" class="list-search" placeholder="Search resources..." onkeyup="filterResources(this.value)" value="${currentResourceSearch}">
-        <div id="resourceItems"></div>
-    `;
+    if (!resourcesList.querySelector('.list-search')) {
+        resourcesList.innerHTML = `
+            <input type="text" class="list-search" placeholder="Search resources..." onkeyup="debouncedFilterResources(this.value)" value="${currentResourceSearch}">
+            <div id="resourceItems"></div>
+        `;
+    }
+
     const resourceItems = document.getElementById('resourceItems');
     if (serverData.resources) {
         const sortedResources = serverData.resources.sort((a, b) => a.localeCompare(b));
+        const resourceFragment = document.createDocumentFragment();
+        
         sortedResources.forEach(resource => {
             const resourceElement = document.createElement('div');
             resourceElement.className = 'resource-item';
             resourceElement.textContent = resource;
-            resourceItems.appendChild(resourceElement);
+            resourceFragment.appendChild(resourceElement);
+        });
+        
+        requestAnimationFrame(() => {
+            resourceItems.innerHTML = '';
+            resourceItems.appendChild(resourceFragment);
         });
     }
 
-    if (currentSearch) filterPlayers(currentSearch);
-    if (currentResourceSearch) filterResources(currentResourceSearch);
+    if (currentSearch) debouncedFilterPlayers(currentSearch);
+    if (currentResourceSearch) debouncedFilterResources(currentResourceSearch);
 }
+
+// Debounced filter functions
+const debouncedFilterPlayers = debounce((searchTerm) => {
+    if (searchTerm === lastPlayerSearch) return;
+    lastPlayerSearch = searchTerm;
+    filterPlayers(searchTerm);
+}, 150);
+
+const debouncedFilterResources = debounce((searchTerm) => {
+    if (searchTerm === lastResourceSearch) return;
+    lastResourceSearch = searchTerm;
+    filterResources(searchTerm);
+}, 150);
 
 function filterPlayers(searchTerm) {
     const playerItems = document.querySelectorAll('.player-item');
